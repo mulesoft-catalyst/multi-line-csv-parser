@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:audit="http://www.mulesoft.org/schema/mule/audit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/audit http://www.mulesoft.org/schema/mule/audit/current/mule-audit.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<sub-flow name="multi-line-csv-parser_parse-header" doc:id="68759ae4-5365-4c93-a4ff-e7597cbaa457" >
+		<flow-ref doc:name="multi-line-csv-parser_finish-header" doc:id="40b2e4f3-38bd-46b3-8baf-36c71004dd77" name="multi-line-csv-parser_finish-header"/>
+		<ee:transform doc:name="Transform Message" doc:id="52f569d8-fe65-4c3a-9781-31c6d627e684">
+			<ee:variables>
+				<ee:set-variable variableName="currentHeader"><![CDATA[%dw 2.0
+output application/java
+---
+read(vars.types[0] ++ '\n' ++ payload, 'application/csv', {"separator" : "|"})[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_parse-line" doc:id="90837b5a-387a-4a89-818e-f5a1981777bd" >
+		<flow-ref doc:name="multi-line-csv-parser_finish-line" doc:id="36a391f1-ff41-4f01-917d-5a64cb1a8a99" name="multi-line-csv-parser_finish-line"/>
+		<ee:transform doc:name="Transform Message" doc:id="ef6abff4-4431-472d-95d3-cf19f7fdd059">
+			<ee:variables >
+				<ee:set-variable variableName="currentLine" ><![CDATA[%dw 2.0
+output application/java
+---
+read(vars.types[1] ++ '\n' ++ payload, 'application/csv', {"separator" : "|"})[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_parse-line-split" doc:id="ce1a5390-c968-455f-bfa2-176b7763e6c4" >
+		<ee:transform doc:name="Transform Message" doc:id="eb2f9412-abbf-49a8-bfd0-c5362a65d885" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+read(vars.types[2] ++ '\n' ++ payload, 'application/csv', {"separator" : "|"})[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="3e10fbbf-f54c-4ffd-8c97-f6498df20003" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="currentLineSplits" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.currentLineSplits + payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_parse-tax-line" doc:id="6d623489-cd2e-4eac-af80-a14009c51940">
+		<ee:transform doc:name="Transform Message" doc:id="b2865873-f08c-485e-9690-b812ec9cc133">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+read(vars.types[3] ++ '\n' ++ payload, 'application/csv', {"separator" : "|"})[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="b68ee9f1-4bd1-407f-a38e-018d3e6c8580">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="currentTaxLines"><![CDATA[%dw 2.0
+output application/java
+---
+vars.currentTaxLines + payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_parse-charge-line" doc:id="b9082707-f06a-4274-a4a9-d5264e0505ff" >
+		<ee:transform doc:name="Transform Message" doc:id="2d8a22c3-ab49-476b-a421-3ba88cd9eb10" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+read(vars.types[4] ++ '\n' ++ payload, 'application/csv', {"separator" : "|"})[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="b23b7a91-3b3b-4ab1-b358-ba7da876078f" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="currentChargeLines" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.currentChargeLines + payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_finish-line" doc:id="d00a900f-7308-4753-9d03-398c0dd42ea1" >
+		<ee:transform doc:name="Transform Message" doc:id="f4d251e9-d92c-4d1c-88df-e1cd4aedc02d">
+			<ee:variables>
+				<ee:set-variable variableName="currentLine" ><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.currentLine != null)
+	vars.currentLine 
+	++
+	{ 'taxLines' : vars.currentTaxLines }
+	++
+	{ 'lineSplits' : vars.currentLineSplits }
+else
+	//set variable to null
+ 	vars.currentLine ]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="8af319cd-9b4e-4d40-9d7b-d732ab017585">
+			<ee:variables>
+				<ee:set-variable variableName="currentLines"><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.currentLine != null)
+	vars.currentLines + vars.currentLine
+else
+	//reset variable
+	vars.currentLines
+]]></ee:set-variable>
+				<ee:set-variable variableName="currentTaxLines" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="currentLineSplits" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="d99274e9-41df-4d04-a3b2-00785e3ca68b" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="currentLine" ><![CDATA[%dw 2.0
+output application/java
+---
+// reset
+null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="multi-line-csv-parser_finish-header" doc:id="a4702573-3300-45d3-8eda-10bc4adfaee1">
+		<flow-ref doc:name="multi-line-csv-parser_finish-line" doc:id="c7bccd10-aaaa-46f2-aaa2-afb7edd4c16f" name="multi-line-csv-parser_finish-line"/>
+		<ee:transform doc:name="Transform Message" doc:id="cdfa52f9-cabe-4d87-b689-76f4f64530b4">
+			<ee:variables>
+				<ee:set-variable variableName="currentHeader" ><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.currentHeader != null)
+	vars.currentHeader 
+	++ 
+	{ 'lines' : vars.currentLines }
+	++
+	{ 'chargeLines' : vars.currentChargeLines }
+else
+	// reset header line
+ 	vars.currentHeader]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="dd2933de-a699-4d19-8969-ba8dc113bee7" >
+			<ee:variables >
+				<ee:set-variable variableName="records" ><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.currentHeader != null)
+	vars.records + vars.currentHeader
+else
+	//reset variable
+	vars.records]]></ee:set-variable>
+				<ee:set-variable variableName="currentLines"><![CDATA[%dw 2.0
+output application/java
+---
+//reset variables related to a single invoice
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="currentChargeLines" ><![CDATA[%dw 2.0
+output application/java
+---
+//reset variables related to a single invoice
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="3c3830da-7ec8-45ab-9eb1-31a80caf2dfa" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="currentHeader" ><![CDATA[%dw 2.0
+output application/java
+---
+// reset
+null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<flow name="multi-line-csv-parser_process-single-file" doc:id="94073fa5-b612-4b01-a070-5dd94dd5ceda" >
+		<ee:transform doc:name="Set variables" doc:id="d6287e4d-f840-4bd9-9c09-6bae15598e1a">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+				<ee:set-variable variableName="records" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="types" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="a612c966-c178-4d6c-a2b0-412a85ed068e" mimeType="application/java"/>
+		<foreach doc:name="For Each" doc:id="8ba9cb6b-2b88-445d-99a4-b3b449a056be" collection="#[payload splitBy('\n')]">
+			<choice doc:name="Choice" doc:id="05032f3c-8e98-490a-99f7-404e8a792006">
+				<when expression="#[payload startsWith('&quot;Header&quot;')]">
+						<flow-ref doc:name="multi-line-csv-parser_parse-header" doc:id="22f0afbb-242d-4e88-b074-a2c7d4411cf5" name="multi-line-csv-parser_parse-header"/>
+				</when>
+				<when expression="#[payload startsWith('&quot;Line&quot;')]" >
+					<flow-ref doc:name="multi-line-csv-parser_parse-line" doc:id="1b309078-5803-4a20-8f2f-abb01f2bbfec" name="multi-line-csv-parser_parse-line"/>
+				</when>
+				<when expression="#[payload startsWith('&quot;TaxLine&quot;')]" >
+					<flow-ref doc:name="multi-line-csv-parser_parse-tax-line" doc:id="66bae00b-ba61-49e5-a439-65f4626fa830" name="multi-line-csv-parser_parse-tax-line"/>
+				</when>
+				<when expression="#[payload startsWith('&quot;Charge&quot;')]" >
+					<flow-ref doc:name="multi-line-csv-parser_parse-charge-line" doc:id="c5f0dac1-958b-4e95-a637-6f9a11e3d21f" name="multi-line-csv-parser_parse-charge-line"/>
+				</when>
+				<when expression="#[payload startsWith('&quot;Line Split&quot;')]" >
+					<flow-ref doc:name="multi-line-csv-parser_parse-line-split" doc:id="a2b3b859-3490-4c9d-844b-5e0bff375db3" name="multi-line-csv-parser_parse-line-split"/>
+				</when>
+				<when expression="#[payload startsWith('&quot;type&quot;')]" >
+					<ee:transform doc:name="Accumulate Type lines" doc:id="632d3cba-9f3e-46d6-9204-2ab44341288e">
+						<ee:variables>
+							<ee:set-variable variableName="types" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.types + payload]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</when>
+				<otherwise>
+					<logger level="INFO" doc:name="Logger" doc:id="a00c5a5d-0c4c-4c06-9797-794c4cac5484" message="Not configured to parse line #[payload]" />
+				</otherwise>
+			</choice>
+		</foreach>
+		<flow-ref doc:name="multi-line-csv-parser_finish-header" doc:id="ba7228d3-7664-4035-85db-e2696df4838d" name="multi-line-csv-parser_finish-header"/>
+		<ee:transform doc:name="Map Request Payload" doc:id="fedbfa6b-12d1-4e53-9b5b-9c613caaf9cb" >
+			<ee:message >
+				<ee:set-payload resource="dwl/JournalLineMapping.dwl" />
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="companyCode" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.records.'account-type-name'[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Flatten Request" doc:id="43f39747-f9fb-4a27-b195-ccce945c8f4d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload map ((header) -> [(header - 'lines') - 'headerTaxLine'] ++ (if(header.headerTaxLine != null) [header.headerTaxLine] else []) ++ lookup('multi-line-csv-parser_combine-lines', header.lines )))
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="92e71b93-5da4-4c6e-8086-20f006aac3af" message="#[output appication/json --- payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ba2304c4-5a7d-4be5-a0fb-ac250a0d7f03">
+				<logger level="INFO" doc:name="Logger" doc:id="b181b51a-5265-4177-a28c-88198694b003" message="File processing failed"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="multi-line-csv-parser_main" doc:id="ffecd31d-4ed8-4a78-b8d8-c29fd2b905d0" >
+		<scheduler doc:name="Scheduler" doc:id="2e57f77e-ce33-4d93-9865-a84fd878890e" >
+			<scheduling-strategy >
+				<cron expression="0 0 0 1 JAN ? 2099" />
+			</scheduling-strategy>
+		</scheduler>
+		<parse-template doc:name="Parse Template" doc:id="49e4c21b-f01e-4bfe-bcfb-650a9cacf7db" location="SampleInput.csv"/>
+		<flow-ref doc:name="multi-line-csv-parser_process-single-file" doc:id="fe9b474d-3124-443b-99f4-192c2d9189f5" name="multi-line-csv-parser_process-single-file" />
+	</flow>
+	<flow name="multi-line-csv-parser_combine-lines" doc:id="2606a553-2dc8-4f1f-a59b-90a5ca25ffe0" >
+		<ee:transform doc:name="Transform Message" doc:id="50456222-54f6-4261-94e3-3390b01e5385" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+
+	flatten(payload map ((line) -> if (line.lineSplits == null) [line - 'lineSplits'] else line.lineSplits ))
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
